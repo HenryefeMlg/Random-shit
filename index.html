@@ -55,6 +55,11 @@
         button:hover {
             background-color: #ff6b81;
         }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -62,28 +67,60 @@
     <h1>Henry games random shit generator</h1>
 
     <div class="video-container">
-        <iframe id="drivePlayer" src="" allow="autoplay"></iframe>
+        <iframe id="drivePlayer" src="" allow="autoplay" allowfullscreen></iframe>
     </div>
 
-    <button onclick="playRandomVideo()">generate random shit</button>
+    <button id="generateBtn" onclick="playRandomVideo()" disabled>Videolar taranıyor...</button>
 
     <script>
-        // Google Drive klasör ID'niz
         const driveFolderId = "1Xgc4VGChclfwkRP0e3kTNtmv54bjfBsP";
-        
-        // Drive klasöründeki toplam video sayınız (Yeni video ekledikçe bu sayıyı arttırın)
-        const totalVideos = 65; 
+        let videoList = [];
 
-        function playRandomVideo() {
-            // 1 ile toplam video sayısı arasında rastgele bir sayı seçer
-            const randomNumber = Math.floor(Math.random() * totalVideos) + 1;
-            
-            const player = document.getElementById("drivePlayer");
-            // Google Drive içindeki videoyu çağırma formatı
-            player.src = `https://drive.google.com/embeddedfolderview?id=${driveFolderId}#grid`;
+        // Drive klasörünün içindeki tüm video ID'lerini otomatik yakalar
+        async function loadDriveVideos() {
+            const btn = document.getElementById("generateBtn");
+            try {
+                // CORS engelini aşarak klasör verisini çek
+                const response = await fetch(`https://api.codetabs.com/v1/proxy?quest=https://drive.google.com/embeddedfolderview?id=${driveFolderId}`);
+                const htmlText = await response.text();
+
+                // Tüm video ID'lerini regex ile filtrele
+                const regex = /\/file\/d\/([a-zA-Z0-9_-]+)/g;
+                let match;
+                const ids = new Set();
+
+                while ((match = regex.exec(htmlText)) !== null) {
+                    ids.add(match[1]);
+                }
+
+                videoList = Array.from(ids);
+
+                if (videoList.length > 0) {
+                    btn.innerText = "generate random shit";
+                    btn.disabled = false;
+                    playRandomVideo(); // İlk açılışta bir video oynat
+                } else {
+                    btn.innerText = "Videolar bulunamadı!";
+                }
+            } catch (error) {
+                console.error("Hata:", error);
+                btn.innerText = "Yükleme hatası!";
+            }
         }
 
-        playRandomVideo();
+        function playRandomVideo() {
+            if (videoList.length === 0) return;
+
+            // Rastgele bir video ID'si seç
+            const randomIndex = Math.floor(Math.random() * videoList.length);
+            const selectedId = videoList[randomIndex];
+            
+            const player = document.getElementById("drivePlayer");
+            // Seçilen videoyu tekil oyuncu (/preview) ekranında açar
+            player.src = `https://drive.google.com/file/d/${selectedId}/preview`;
+        }
+
+        loadDriveVideos();
     </script>
 
 </body>
