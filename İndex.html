@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Henry Games Random Shit Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .video-container {
+            width: 90%;
+            max-width: 640px;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #ff4757;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #ff6b81;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Henry games random shit generator</h1>
+
+    <div class="video-container">
+        <video id="randomVideo" controls autoplay muted>
+            <source id="videoSource" src="" type="video/mp4">
+            Tarayıcınız video etiketini desteklemiyor.
+        </video>
+    </div>
+
+    <button onclick="playRandomVideo()">generate random shit</button>
+
+    <script>
+        // videos klasöründeki video dosya isimlerinizi buraya ekleyin
+        const videoList = [
+            "video1.mp4",
+            "video2.mp4",
+            "video3.mp4",
+            "funny.mp4"
+        ];
+
+        function playRandomVideo() {
+            if (videoList.length === 0) return;
+
+            const randomIndex = Math.floor(Math.random() * videoList.length);
+            const selectedVideo = videoList[randomIndex];
+            
+            const videoPlayer = document.getElementById("randomVideo");
+            const videoSource = document.getElementById("videoSource");
+
+            videoSource.src = "videos/" + selectedVideo;
+            videoPlayer.load();
+            videoPlayer.play();
+        }
+    </script>
+
+</body>
+</html>
