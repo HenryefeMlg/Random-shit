@@ -33,10 +33,10 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        iframe {
+        video {
             width: 100%;
             height: 100%;
-            border: none;
+            display: block;
         }
 
         button {
@@ -67,56 +67,62 @@
     <h1>Henry games random shit generator</h1>
 
     <div class="video-container">
-        <iframe id="drivePlayer" src="" allow="autoplay"></iframe>
+        <video id="randomVideo" controls autoplay muted>
+            <source id="videoSource" src="" type="video/mp4">
+            Tarayıcınız video etiketini desteklemiyor.
+        </video>
     </div>
 
-    <button id="generateBtn" onclick="playRandomVideo()" disabled>Videolar Yükleniyor...</button>
+    <button id="generateBtn" onclick="playRandomVideo()" disabled>Videolar Taranıyor...</button>
 
     <script>
-        const driveFolderId = "1Xgc4VGChclfwkRP0e3kTNtmv54bjfBsP";
-        let videoList = [];
+        let maxVideoCount = 0;
 
-        async function fetchDriveVideos() {
+        // Klasördeki en son videonun numarasını otomatik bulur
+        async function detectTotalVideos() {
+            let count = 1;
+            while (true) {
+                try {
+                    // Videonun var olup olmadığını kontrol et (HEAD isteği)
+                    const response = await fetch(`videos/${count}.mp4`, { method: 'HEAD' });
+                    if (response.ok) {
+                        count++;
+                    } else {
+                        break; // Video bulunamadığı an döngüyü bitir
+                    }
+                } catch (e) {
+                    break;
+                }
+            }
+            
+            maxVideoCount = count - 1;
             const btn = document.getElementById("generateBtn");
-            try {
-                const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(`https://drive.google.com/embeddedfolderview?id=${driveFolderId}`);
-                const response = await fetch(proxyUrl);
-                const data = await response.json();
-                
-                const regex = /\/file\/d\/([a-zA-Z0-9_-]+)/g;
-                let match;
-                const ids = new Set();
 
-                while ((match = regex.exec(data.contents)) !== null) {
-                    ids.add(match[1]);
-                }
-
-                videoList = Array.from(ids);
-
-                if (videoList.length > 0) {
-                    btn.innerText = "generate random shit";
-                    btn.disabled = false;
-                    playRandomVideo(); // İlk açılışta da rastgele bir video seçsin
-                } else {
-                    btn.innerText = "Klasörde video bulunamadı!";
-                }
-            } catch (error) {
-                console.error("Hata:", error);
-                btn.innerText = "Videolar yüklenemedi!";
+            if (maxVideoCount > 0) {
+                btn.innerText = "generate random shit";
+                btn.disabled = false;
+                playRandomVideo();
+            } else {
+                btn.innerText = "Hiç video bulunamadı!";
             }
         }
 
         function playRandomVideo() {
-            if (videoList.length === 0) return;
+            if (maxVideoCount === 0) return;
 
-            const randomIndex = Math.floor(Math.random() * videoList.length);
-            const fileId = videoList[randomIndex];
+            // 1 ile bulunan en son video sayısı arasında seçim yapar
+            const randomNumber = Math.floor(Math.random() * maxVideoCount) + 1;
             
-            const player = document.getElementById("drivePlayer");
-            player.src = `https://drive.google.com/file/d/${fileId}/preview`;
+            const videoPlayer = document.getElementById("randomVideo");
+            const videoSource = document.getElementById("videoSource");
+
+            videoSource.src = `videos/${randomNumber}.mp4`;
+            videoPlayer.load();
+            videoPlayer.play();
         }
 
-        fetchDriveVideos();
+        // Sayfa açıldığında mevcut videoları tara
+        detectTotalVideos();
     </script>
 
 </body>
