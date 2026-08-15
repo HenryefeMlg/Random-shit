@@ -68,23 +68,31 @@
     <button onclick="playRandomVideo()">generate random shit</button>
 
     <script>
-        // Google Drive Klasör ID'niz
-        const driveFolderId = "1Xgc4VGChclfwkRP0e3kTNtmv54bjfBsP";
-
-        // Şu anki EN SON videonun numarası (Klasöre yeni sayı ekledikçe burayı güncellersin)
+        // İlettiğin tam adresi buraya tanımladım:
+        const scriptUrl = "https://script.google.com/macros/s/AKfycbw5P2VVSLE0IE6pJ9CQ47mrnL3RHdSKIjeEGpOqtaiy8-aUluq4D5OBp1I9pNZMuQydqw/exec";
+        
+        // Drive klasöründeki toplam video sayısı
         const totalVideos = 65; 
 
-        function playRandomVideo() {
-            // 1 ile toplam video sayısı arasında rastgele bir sayı seçer
+        async function playRandomVideo() {
             const randomNumber = Math.floor(Math.random() * totalVideos) + 1;
             
-            const player = document.getElementById("drivePlayer");
-            
-            // Seçilen numaradaki videoyu doğrudan ekran ortasında açar
-            player.src = `https://drive.google.com/embeddedfolderview?id=${driveFolderId}#grid`;
+            try {
+                const response = await fetch(`${scriptUrl}?num=${randomNumber}`);
+                const fileId = await response.text();
+
+                if (fileId && fileId.trim() !== "") {
+                    const player = document.getElementById("drivePlayer");
+                    player.src = `https://drive.google.com/file/d/${fileId.trim()}/preview`;
+                } else {
+                    console.error("Video ID alınamadı, numara: " + randomNumber);
+                }
+            } catch (e) {
+                console.error("Bağlantı hatası:", e);
+            }
         }
 
-        // Sayfa açıldığında otomatik seçsin
+        // Sayfa açıldığında ilk videoyu oynat
         playRandomVideo();
     </script>
 
