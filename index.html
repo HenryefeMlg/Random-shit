@@ -33,10 +33,10 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        video {
+        iframe {
             width: 100%;
             height: 100%;
-            display: block;
+            border: none;
         }
 
         button {
@@ -55,11 +55,6 @@
         button:hover {
             background-color: #ff6b81;
         }
-
-        button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
     </style>
 </head>
 <body>
@@ -67,62 +62,28 @@
     <h1>Henry games random shit generator</h1>
 
     <div class="video-container">
-        <video id="randomVideo" controls autoplay muted>
-            <source id="videoSource" src="" type="video/mp4">
-            Tarayıcınız video etiketini desteklemiyor.
-        </video>
+        <iframe id="drivePlayer" src="" allow="autoplay"></iframe>
     </div>
 
-    <button id="generateBtn" onclick="playRandomVideo()" disabled>Videolar Taranıyor...</button>
+    <button onclick="playRandomVideo()">generate random shit</button>
 
     <script>
-        let maxVideoCount = 0;
-
-        // Klasördeki en son videonun numarasını otomatik bulur
-        async function detectTotalVideos() {
-            let count = 1;
-            while (true) {
-                try {
-                    // Videonun var olup olmadığını kontrol et (HEAD isteği)
-                    const response = await fetch(`videos/${count}.mp4`, { method: 'HEAD' });
-                    if (response.ok) {
-                        count++;
-                    } else {
-                        break; // Video bulunamadığı an döngüyü bitir
-                    }
-                } catch (e) {
-                    break;
-                }
-            }
-            
-            maxVideoCount = count - 1;
-            const btn = document.getElementById("generateBtn");
-
-            if (maxVideoCount > 0) {
-                btn.innerText = "generate random shit";
-                btn.disabled = false;
-                playRandomVideo();
-            } else {
-                btn.innerText = "Hiç video bulunamadı!";
-            }
-        }
+        // Google Drive klasör ID'niz
+        const driveFolderId = "1Xgc4VGChclfwkRP0e3kTNtmv54bjfBsP";
+        
+        // Drive klasöründeki toplam video sayınız (Yeni video ekledikçe bu sayıyı arttırın)
+        const totalVideos = 65; 
 
         function playRandomVideo() {
-            if (maxVideoCount === 0) return;
-
-            // 1 ile bulunan en son video sayısı arasında seçim yapar
-            const randomNumber = Math.floor(Math.random() * maxVideoCount) + 1;
+            // 1 ile toplam video sayısı arasında rastgele bir sayı seçer
+            const randomNumber = Math.floor(Math.random() * totalVideos) + 1;
             
-            const videoPlayer = document.getElementById("randomVideo");
-            const videoSource = document.getElementById("videoSource");
-
-            videoSource.src = `videos/${randomNumber}.mp4`;
-            videoPlayer.load();
-            videoPlayer.play();
+            const player = document.getElementById("drivePlayer");
+            // Google Drive içindeki videoyu çağırma formatı
+            player.src = `https://drive.google.com/embeddedfolderview?id=${driveFolderId}#grid`;
         }
 
-        // Sayfa açıldığında mevcut videoları tara
-        detectTotalVideos();
+        playRandomVideo();
     </script>
 
 </body>
