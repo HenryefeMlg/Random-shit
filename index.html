@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Henry Games Random Shit Generator</title>
     
-    <!-- Mobil Uyumlu Plyr Video Oyuncusu CSS -->
+    <!-- Mobil Uyumlu Plyr Video Oynatıcı CSS -->
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
     
     <style>
         * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0b0c10;
             color: #ffffff;
             display: flex;
             flex-direction: column;
@@ -27,40 +27,41 @@
             font-size: 1.8rem;
             margin-bottom: 20px;
             text-align: center;
+            color: #66fcf1;
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
             text-transform: uppercase;
         }
 
         .video-container {
             width: 100%;
-            max-width: 640px;
-            background-color: #000;
+            max-width: 650px;
+            background-color: #1f2833;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+            border: 2px solid #45a29e;
         }
 
-        /* Plyr Tema Rengi */
+        /* Plyr tema özelleştirmeleri */
         :root {
-            --plyr-color-main: #ff4757;
+            --plyr-color-main: #66fcf1;
+            --plyr-video-control-color: #ffffff;
         }
 
         button {
             margin-top: 20px;
-            padding: 14px 28px;
+            width: 100%;
+            max-width: 650px;
+            padding: 16px;
             font-size: 1.1rem;
             font-weight: bold;
-            color: #ffffff;
-            background-color: #ff4757;
+            color: #0b0c10;
+            background: linear-gradient(135deg, #66fcf1, #45a29e);
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            width: 100%;
-            max-width: 640px;
-            transition: background 0.2s ease, transform 0.1s ease;
-        }
-
-        button:hover {
-            background-color: #ff6b81;
+            box-shadow: 0 4px 15px rgba(102, 252, 241, 0.3);
+            transition: transform 0.1s ease, background 0.2s ease;
         }
 
         button:active {
@@ -73,7 +74,8 @@
     <h1>Henry Games Random Shit Generator</h1>
 
     <div class="video-container">
-        <video id="player" playsinline controls>
+        <!-- Mobil Dostu Video Oynatıcı -->
+        <video id="player" playsinline controls preload="metadata">
             <source id="videoSource" src="" type="video/mp4">
             Tarayıcınız video etiketini desteklemiyor.
         </video>
@@ -85,46 +87,43 @@
     <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
     <script>
-        // TOPLAM VİDEO SAYINIZ (Örn: 60 adet video varsa 60 yazın)
-        const TOTAL_VIDEOS = 60; 
-        
-        let lastPlayed = null;
-
-        // Modern Mobil Video Oyuncusunu Başlat
+        // Plyr Mobil Uyumlu Player'ı Başlat
         const player = new Plyr('#player', {
             controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
             autoplay: true
         });
 
+        // DRIVE VE VİDEO AYARLARI
+        const folderId = "1Xgc4VGChclfwkRP0e3kTNtmv54bjfBsP";
+        const totalVideos = 60; // Klasördeki toplam video sayınız (Örn: 1.mp4, 2.mp4 ... 60.mp4)
+
+        let lastPlayed = null;
+
         function playRandomVideo() {
-            let randomIndex;
-            
-            // Aynı video üst üste denk gelmesin
+            let randomNum;
+            // Üst üste aynı videonun gelmesini engelle
             do {
-                randomIndex = Math.floor(Math.random() * TOTAL_VIDEOS) + 1;
-            } while (randomIndex === lastPlayed && TOTAL_VIDEOS > 1);
+                randomNum = Math.floor(Math.random() * totalVideos) + 1;
+            } while (randomNum === lastPlayed && totalVideos > 1);
+            
+            lastPlayed = randomNum;
 
-            lastPlayed = randomIndex;
+            // Google Drive doğrudan dosya adı akış URL'si
+            const videoUrl = `https://drive.google.com/uc?export=download&id=${folderId}&filename=${randomNum}.mp4`;
 
-            // GitHub'daki videos/1.mp4, videos/2.mp4 formatındaki yol
-            const selectedVideoPath = `videos/${randomIndex}.mp4`;
-
-            // Videoyu Plyr üzerinden yükle ve oynat
+            // Videoyu Player'a Yükle ve Oynat
             player.source = {
                 type: 'video',
                 sources: [
                     {
-                        src: selectedVideoPath,
-                        type: 'video/mp4'
+                        src: videoUrl,
+                        type: 'video/mp4',
                     }
                 ]
             };
             
-            player.play();
+            player.play().catch(err => console.log("Otomatik oynatma kısıtlandı:", err));
         }
-
-        // Sayfa açıldığında ilk rastgele videoyu oynat
-        playRandomVideo();
     </script>
 
 </body>
