@@ -4,94 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Henry Games Random Shit Generator</title>
+    
+    <!-- Mobil Uyumlu Plyr Video Oyuncusu CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    
     <style>
         * { box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0b0c10;
-            color: #c5c6c7;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
         }
 
         h1 {
-            font-size: 2.2rem;
-            margin-bottom: 25px;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
             text-align: center;
-            color: #66fcf1;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
         }
 
-        .stage {
-            position: relative;
+        .video-container {
             width: 100%;
-            max-width: 720px;
-            aspect-ratio: 16 / 9;
-            background-color: #1f2833;
+            max-width: 640px;
+            background-color: #000;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-            border: 2px solid #45a29e;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.7);
         }
 
-        /* Çift video player mantığı: Kesintisiz geçiş ve yumuşak blend sağlar */
-        video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            opacity: 0;
-            transition: opacity 0.4s ease-in-out;
-        }
-
-        video.active {
-            opacity: 1;
-            z-index: 2;
-        }
-
-        .controls-wrapper {
-            margin-top: 30px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
+        /* Plyr Tema Rengi */
+        :root {
+            --plyr-color-main: #ff4757;
         }
 
         button {
+            margin-top: 20px;
             padding: 14px 28px;
             font-size: 1.1rem;
             font-weight: bold;
-            color: #0b0c10;
-            background: linear-gradient(135deg, #66fcf1, #45a29e);
+            color: #ffffff;
+            background-color: #ff4757;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(102, 252, 241, 0.2);
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
+            width: 100%;
+            max-width: 640px;
+            transition: background 0.2s ease, transform 0.1s ease;
         }
 
-        button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 252, 241, 0.4);
+        button:hover {
+            background-color: #ff6b81;
         }
 
-        button:active:not(:disabled) {
-            transform: translateY(1px);
-        }
-
-        button:disabled {
-            background: #2c3531;
-            color: #666;
-            cursor: not-allowed;
-            box-shadow: none;
+        button:active {
+            transform: scale(0.98);
         }
     </style>
 </head>
@@ -99,98 +72,59 @@
 
     <h1>Henry Games Random Shit Generator</h1>
 
-    <div class="stage" id="stage">
-        <!-- İki ayrı video kanalı sayesinde videolar arası Crossfade geçişi sağlanır -->
-        <video id="playerA" class="active" playsinline></video>
-        <video id="playerB" playsinline></video>
+    <div class="video-container">
+        <video id="player" playsinline controls>
+            <source id="videoSource" src="" type="video/mp4">
+            Tarayıcınız video etiketini desteklemiyor.
+        </video>
     </div>
 
-    <div class="controls-wrapper">
-        <button id="generateBtn" disabled>Videolar Yükleniyor...</button>
-    </div>
+    <button id="generateBtn" onclick="playRandomVideo()">GENERATE RANDOM SHIT</button>
+
+    <!-- Plyr JS -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 
     <script>
-        const btn = document.getElementById('generateBtn');
-        const playerA = document.getElementById('playerA');
-        const playerB = document.getElementById('playerB');
+        // TOPLAM VİDEO SAYINIZ (Örn: 60 adet video varsa 60 yazın)
+        const TOTAL_VIDEOS = 60; 
         
-        let activePlayer = playerA;
-        let idlePlayer = playerB;
-        let videoList = [];
-        let history = [];
+        let lastPlayed = null;
 
-        // GitHub API'sinden dinamik video verisi çekme
-        async function loadPlaylist() {
-            const pathParts = window.location.pathname.split('/').filter(Boolean);
-            const username = window.location.hostname.split('.')[0];
-            const repoName = pathParts[0] || `${username}.github.io`;
+        // Modern Mobil Video Oyuncusunu Başlat
+        const player = new Plyr('#player', {
+            controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+            autoplay: true
+        });
 
-            try {
-                const res = await fetch(`https://api.github.com/repos/${username}/${repoName}/contents/videos`);
-                if (!res.ok) throw new Error("API erişimi başarısız");
-                
-                const data = await res.json();
-                videoList = data
-                    .filter(file => file.type === "file" && /\.(mp4|webm|ogg|mov)$/i.test(file.name))
-                    .map(file => file.download_url || file.path);
-
-                if (videoList.length > 0) {
-                    btn.innerText = "Generate Random Shit";
-                    btn.disabled = false;
-                } else {
-                    btn.innerText = "Videolar Klasörü Boş!";
-                }
-            } catch (err) {
-                console.error("Yükleme Hatası:", err);
-                btn.innerText = "Hata: Videolar Çekilemedi";
-            }
-        }
-
-        // Rastgele video seçici (Üst üste aynı videoyu denk getirmeyen mantık)
-        function getRandomVideo() {
-            if (videoList.length === 1) return videoList[0];
+        function playRandomVideo() {
+            let randomIndex;
             
-            let selected;
+            // Aynı video üst üste denk gelmesin
             do {
-                const index = Math.floor(Math.random() * videoList.length);
-                selected = videoList[index];
-            } while (history[history.length - 1] === selected);
+                randomIndex = Math.floor(Math.random() * TOTAL_VIDEOS) + 1;
+            } while (randomIndex === lastPlayed && TOTAL_VIDEOS > 1);
 
-            history.push(selected);
-            if (history.length > 5) history.shift(); // Geçmiş takibi
-            return selected;
+            lastPlayed = randomIndex;
+
+            // GitHub'daki videos/1.mp4, videos/2.mp4 formatındaki yol
+            const selectedVideoPath = `videos/${randomIndex}.mp4`;
+
+            // Videoyu Plyr üzerinden yükle ve oynat
+            player.source = {
+                type: 'video',
+                sources: [
+                    {
+                        src: selectedVideoPath,
+                        type: 'video/mp4'
+                    }
+                ]
+            };
+            
+            player.play();
         }
 
-        // Crossfade geçişli video oynatma motoru
-        function playNext() {
-            const nextSrc = getRandomVideo();
-            if (!nextSrc) return;
-
-            // Arka plandaki player'a videoyu yükle
-            idlePlayer.src = nextSrc;
-            idlePlayer.muted = false; // Sesli oynatma
-            idlePlayer.controls = true;
-
-            idlePlayer.play().then(() => {
-                // Video oynamaya başladığı an kanalları değiştir
-                idlePlayer.classList.add('active');
-                activePlayer.classList.remove('active');
-                
-                // Aktif kanalı durdur ve sıfırla
-                activePlayer.pause();
-                activePlayer.controls = false;
-
-                // Kanalların rollerini değiştir
-                [activePlayer, idlePlayer] = [idlePlayer, activePlayer];
-            }).catch(err => {
-                console.warn("Otomatik oynatma engellendi, sessiz modda deneniyor...", err);
-                idlePlayer.muted = true;
-                idlePlayer.play();
-            });
-        }
-
-        btn.addEventListener('click', playNext);
-        loadPlaylist();
+        // Sayfa açıldığında ilk rastgele videoyu oynat
+        playRandomVideo();
     </script>
 
 </body>
