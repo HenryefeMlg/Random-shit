@@ -1,6 +1,5 @@
 
 -- Henry Games | Part Route Controller
--- StarterPlayer > StarterPlayerScripts > LocalScript
 -- Kendi Roblox Studio oyununun test ortamı için.
 
 local Players = game:GetService("Players")
@@ -8,11 +7,11 @@ local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local running = false
+local flying = false
 local cards = {}
 local cardCounter = 0
-local visited = {}
 local currentTween = nil
-local flying = false
+local visited = {}
 
 -- GUI
 local gui = Instance.new("ScreenGui")
@@ -21,12 +20,11 @@ gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local main = Instance.new("Frame")
-main.Size = UDim2.fromOffset(340, 460)
-main.Position = UDim2.new(0, 20, 0.5, -230)
+main.Size = UDim2.fromOffset(350, 500)
+main.Position = UDim2.new(0, 20, 0.5, -250)
 main.BackgroundColor3 = Color3.fromRGB(30, 32, 39)
 main.BorderSizePixel = 0
 main.Parent = gui
-
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
 local title = Instance.new("TextLabel")
@@ -39,40 +37,34 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 16
 title.Parent = main
 
-local function makeBox(parent, placeholder, value, position)
+local function makeBox(placeholder, value, y)
     local box = Instance.new("TextBox")
-    box.Size = UDim2.new(1, -20, 0, 32)
-    box.Position = position
+    box.Size = UDim2.new(1, -20, 0, 30)
+    box.Position = UDim2.fromOffset(10, y)
     box.BackgroundColor3 = Color3.fromRGB(45, 48, 58)
     box.TextColor3 = Color3.new(1, 1, 1)
     box.PlaceholderText = placeholder
     box.Text = value
     box.Font = Enum.Font.Gotham
-    box.TextSize = 13
+    box.TextSize = 12
     box.ClearTextOnFocus = false
-    box.Parent = parent
+    box.Parent = main
     Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
     return box
 end
 
-local interval = makeBox(
-    main, "Hedefler arası süre (saniye)", "3",
-    UDim2.fromOffset(10, 43)
-)
-
-local flySpeed = makeBox(
-    main, "Uçuş hızı (stud/s)", "45",
-    UDim2.fromOffset(10, 81)
-)
+local interval = makeBox("Hedefler arasındaki bekleme (sn)", "1", 43)
+local arrivalWait = makeBox("Hedefe ulaştıktan sonra bekleme (sn)", "2", 79)
+local flySpeed = makeBox("Uçuş hızı (stud/s)", "45", 115)
 
 local flyButton = Instance.new("TextButton")
-flyButton.Size = UDim2.new(1, -20, 0, 32)
-flyButton.Position = UDim2.fromOffset(10, 119)
+flyButton.Size = UDim2.new(1, -20, 0, 30)
+flyButton.Position = UDim2.fromOffset(10, 151)
 flyButton.BackgroundColor3 = Color3.fromRGB(55, 58, 69)
 flyButton.TextColor3 = Color3.new(1, 1, 1)
 flyButton.Text = "Uçarak git: KAPALI"
 flyButton.Font = Enum.Font.Gotham
-flyButton.TextSize = 13
+flyButton.TextSize = 12
 flyButton.Parent = main
 Instance.new("UICorner", flyButton).CornerRadius = UDim.new(0, 6)
 
@@ -85,8 +77,8 @@ flyButton.MouseButton1Click:Connect(function()
 end)
 
 local list = Instance.new("ScrollingFrame")
-list.Size = UDim2.new(1, -20, 1, -252)
-list.Position = UDim2.fromOffset(10, 159)
+list.Size = UDim2.new(1, -20, 1, -275)
+list.Position = UDim2.fromOffset(10, 188)
 list.BackgroundColor3 = Color3.fromRGB(24, 26, 32)
 list.BorderSizePixel = 0
 list.ScrollBarThickness = 5
@@ -100,9 +92,7 @@ layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = list
 
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    list.CanvasSize = UDim2.fromOffset(
-        0, layout.AbsoluteContentSize.Y + 8
-    )
+    list.CanvasSize = UDim2.fromOffset(0, layout.AbsoluteContentSize.Y + 8)
 end)
 
 local status = Instance.new("TextLabel")
@@ -120,7 +110,7 @@ local function addCard(defaultName)
     cardCounter += 1
 
     local card = Instance.new("Frame")
-    card.Size = UDim2.new(1, -8, 0, 62)
+    card.Size = UDim2.new(1, -8, 0, 58)
     card.BackgroundColor3 = Color3.fromRGB(42, 45, 54)
     card.BorderSizePixel = 0
     card.LayoutOrder = cardCounter
@@ -128,11 +118,11 @@ local function addCard(defaultName)
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 6)
 
     local input = Instance.new("TextBox")
-    input.Size = UDim2.new(1, -48, 0, 34)
+    input.Size = UDim2.new(1, -48, 0, 32)
     input.Position = UDim2.fromOffset(6, 6)
     input.BackgroundColor3 = Color3.fromRGB(56, 60, 71)
     input.TextColor3 = Color3.new(1, 1, 1)
-    input.PlaceholderText = "Workspace Part adı"
+    input.PlaceholderText = "Part adı"
     input.Text = defaultName or ""
     input.ClearTextOnFocus = false
     input.Font = Enum.Font.Gotham
@@ -142,40 +132,27 @@ local function addCard(defaultName)
 
     local remove = Instance.new("TextButton")
     remove.Size = UDim2.fromOffset(30, 30)
-    remove.Position = UDim2.new(1, -36, 0, 8)
+    remove.Position = UDim2.new(1, -36, 0, 7)
     remove.BackgroundColor3 = Color3.fromRGB(150, 55, 60)
     remove.Text = "X"
     remove.TextColor3 = Color3.new(1, 1, 1)
     remove.Font = Enum.Font.GothamBold
-    remove.TextSize = 13
+    remove.TextSize = 12
     remove.Parent = card
     Instance.new("UICorner", remove).CornerRadius = UDim.new(0, 5)
 
-    local number = Instance.new("TextLabel")
-    number.Size = UDim2.new(1, -12, 0, 16)
-    number.Position = UDim2.fromOffset(6, 43)
-    number.BackgroundTransparency = 1
-    number.Text = "Hedef #" .. cardCounter
-    number.TextColor3 = Color3.fromRGB(175, 185, 200)
-    number.TextXAlignment = Enum.TextXAlignment.Left
-    number.Font = Enum.Font.Gotham
-    number.TextSize = 10
-    number.Parent = card
-
     local entry = {
-        frame = card,
         input = input,
+        frame = card,
         removed = false,
     }
-
     table.insert(cards, entry)
 
     remove.MouseButton1Click:Connect(function()
         if running then
-            status.Text = "Kart silmek için önce döngüyü durdur."
+            status.Text = "Önce döngüyü durdur."
             return
         end
-
         entry.removed = true
         card:Destroy()
     end)
@@ -205,7 +182,7 @@ startButton.BackgroundColor3 = Color3.fromRGB(40, 145, 95)
 startButton.Text = "Döngüyü başlat"
 startButton.TextColor3 = Color3.new(1, 1, 1)
 startButton.Font = Enum.Font.GothamBold
-startButton.TextSize = 13
+startButton.TextSize = 12
 startButton.Parent = main
 Instance.new("UICorner", startButton).CornerRadius = UDim.new(0, 6)
 
@@ -215,26 +192,25 @@ local function getRoot()
     return character:FindFirstChild("HumanoidRootPart")
 end
 
-local function findPart(name)
+local function findPartsByName(name)
+    local result = {}
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("BasePart") and obj.Name == name then
-            return obj
+            table.insert(result, obj)
         end
     end
-    return nil
+    return result
 end
 
 local function waitInterruptible(seconds)
-    local finish = os.clock() + seconds
-
-    while running and os.clock() < finish do
+    local deadline = os.clock() + seconds
+    while running and os.clock() < deadline do
         task.wait(0.05)
     end
 end
 
 local function moveToPart(part, useFlight)
     local root = getRoot()
-
     if not root or not part:IsDescendantOf(workspace) then
         return false
     end
@@ -244,23 +220,20 @@ local function moveToPart(part, useFlight)
         return true
     end
 
-    local speed = math.clamp(
-        tonumber(flySpeed.Text) or 45, 1, 1000
-    )
-
-    local distance = (root.Position - part.Position).Magnitude
+    local speed = math.clamp(tonumber(flySpeed.Text) or 45, 1, 1000)
+    local destination = part.Position + Vector3.new(0, 4, 0)
+    local distance = (root.Position - destination).Magnitude
     local duration = math.max(distance / speed, 0.1)
-    local destination = part.CFrame + Vector3.new(0, 4, 0)
 
     currentTween = TweenService:Create(
         root,
         TweenInfo.new(duration, Enum.EasingStyle.Linear),
-        {CFrame = destination}
+        {CFrame = CFrame.new(destination) * root.CFrame.Rotation}
     )
 
     currentTween:Play()
-
     local completed = false
+
     local connection = currentTween.Completed:Connect(function()
         completed = true
     end)
@@ -294,56 +267,64 @@ startButton.MouseButton1Click:Connect(function()
         return
     end
 
-    local targets = {}
-    local unique = {}
-
-    for _, card in ipairs(cards) do
-        if not card.removed then
-            local name = card.input.Text
-                :gsub("^%s+", "")
-                :gsub("%s+$", "")
-
-            if name ~= "" then
-                if unique[name] then
-                    status.Text = "Aynı Part adı iki kez girilmiş."
-                    return
-                end
-
-                unique[name] = true
-                local part = findPart(name)
-
-                if not part then
-                    status.Text = "Part bulunamadı: " .. name
-                    return
-                end
-
-                table.insert(targets, part)
-            end
-        end
-    end
-
-    if #targets == 0 then
-        status.Text = "Önce en az bir Part ekle."
-        return
-    end
-
-    local seconds = tonumber(interval.Text)
-
-    if not seconds or seconds < 0 then
-        status.Text = "Geçerli bir süre gir."
-        return
-    end
-
+    local gap = tonumber(interval.Text)
+    local stay = tonumber(arrivalWait.Text)
     local speed = tonumber(flySpeed.Text)
+
+    if not gap or gap < 0 or not stay or stay < 0 then
+        status.Text = "Bekleme sürelerini doğru gir."
+        return
+    end
 
     if not speed or speed <= 0 then
         status.Text = "Uçuş hızı 0'dan büyük olmalı."
         return
     end
 
+    local names = {}
+    for _, card in ipairs(cards) do
+        if not card.removed then
+            local name = card.input.Text:match("^%s*(.-)%s*$")
+            if name and name ~= "" then
+                table.insert(names, name)
+            end
+        end
+    end
+
+    if #names == 0 then
+        status.Text = "En az bir hedef adı gir."
+        return
+    end
+
+    local targets = {}
+    local seen = {}
+
+    for _, name in ipairs(names) do
+        for _, part in ipairs(findPartsByName(name)) do
+            if not seen[part] then
+                seen[part] = true
+                table.insert(targets, part)
+            end
+        end
+    end
+
+    if #targets == 0 then
+        status.Text = "Girilen isimlerle eşleşen Part yok."
+        return
+    end
+
+    -- Başlangıç konumuna göre en yakından en uzağa sırala.
+    local root = getRoot()
+    if root then
+        local origin = root.Position
+        table.sort(targets, function(a, b)
+            return (a.Position - origin).Magnitude
+                < (b.Position - origin).Magnitude
+        end)
+    end
+
     visited = {}
     running = true
-
     startButton.Text = "Döngüyü durdur"
     startButton.BackgroundColor3 = Color3.fromRGB(170, 60, 60)
 
@@ -351,12 +332,20 @@ startButton.MouseButton1Click:Connect(function()
         for _, part in ipairs(targets) do
             if not running then break end
 
-            if not visited[part] then
+            if not visited[part] and part:IsDescendantOf(workspace) then
                 status.Text = "Hedef: " .. part.Name
 
                 if moveToPart(part, flying) then
                     visited[part] = true
-                    waitInterruptible(seconds)
+                    status.Text = "Ulaşıldı: " .. part.Name
+
+                    -- Hedefte bekle.
+                    waitInterruptible(stay)
+
+                    -- Hedefler arasında bekle.
+                    if running then
+                        waitInterruptible(gap)
+                    end
                 else
                     if running then
                         status.Text = "Hedefe ulaşılamadı."
@@ -376,5 +365,4 @@ startButton.MouseButton1Click:Connect(function()
     end)
 end)
 
-addCard("Part1")
-addCard("Part2")
+addCard("Part")
