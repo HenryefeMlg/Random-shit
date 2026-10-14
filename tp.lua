@@ -1,7 +1,7 @@
 
 -- Henry Games | Part Route Controller
--- Kendi Roblox Studio oyunun için LocalScript
--- Konum: StarterPlayer > StarterPlayerScripts
+-- StarterPlayer > StarterPlayerScripts > LocalScript
+-- Kendi Roblox Studio oyununun test ortamı için.
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -12,25 +12,25 @@ local cards = {}
 local cardCounter = 0
 local visited = {}
 local currentTween = nil
+local flying = false
 
+-- GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "HenryRouteController"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local main = Instance.new("Frame")
-main.Size = UDim2.fromOffset(340, 420)
-main.Position = UDim2.new(0, 20, 0.5, -210)
+main.Size = UDim2.fromOffset(340, 460)
+main.Position = UDim2.new(0, 20, 0.5, -230)
 main.BackgroundColor3 = Color3.fromRGB(30, 32, 39)
 main.BorderSizePixel = 0
 main.Parent = gui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = main
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -20, 0, 40)
+title.Size = UDim2.new(1, -20, 0, 35)
 title.Position = UDim2.fromOffset(10, 5)
 title.BackgroundTransparency = 1
 title.Text = "Henry Games | Part Routes"
@@ -39,22 +39,35 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 16
 title.Parent = main
 
-local interval = Instance.new("TextBox")
-interval.Size = UDim2.new(1, -20, 0, 32)
-interval.Position = UDim2.fromOffset(10, 48)
-interval.BackgroundColor3 = Color3.fromRGB(45, 48, 58)
-interval.TextColor3 = Color3.new(1, 1, 1)
-interval.PlaceholderText = "Hedefler arası süre (saniye)"
-interval.Text = "3"
-interval.Font = Enum.Font.Gotham
-interval.TextSize = 13
-interval.ClearTextOnFocus = false
-interval.Parent = main
-Instance.new("UICorner", interval).CornerRadius = UDim.new(0, 6)
+local function makeBox(parent, placeholder, value, position)
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(1, -20, 0, 32)
+    box.Position = position
+    box.BackgroundColor3 = Color3.fromRGB(45, 48, 58)
+    box.TextColor3 = Color3.new(1, 1, 1)
+    box.PlaceholderText = placeholder
+    box.Text = value
+    box.Font = Enum.Font.Gotham
+    box.TextSize = 13
+    box.ClearTextOnFocus = false
+    box.Parent = parent
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+    return box
+end
+
+local interval = makeBox(
+    main, "Hedefler arası süre (saniye)", "3",
+    UDim2.fromOffset(10, 43)
+)
+
+local flySpeed = makeBox(
+    main, "Uçuş hızı (stud/s)", "45",
+    UDim2.fromOffset(10, 81)
+)
 
 local flyButton = Instance.new("TextButton")
 flyButton.Size = UDim2.new(1, -20, 0, 32)
-flyButton.Position = UDim2.fromOffset(10, 88)
+flyButton.Position = UDim2.fromOffset(10, 119)
 flyButton.BackgroundColor3 = Color3.fromRGB(55, 58, 69)
 flyButton.TextColor3 = Color3.new(1, 1, 1)
 flyButton.Text = "Uçarak git: KAPALI"
@@ -62,8 +75,6 @@ flyButton.Font = Enum.Font.Gotham
 flyButton.TextSize = 13
 flyButton.Parent = main
 Instance.new("UICorner", flyButton).CornerRadius = UDim.new(0, 6)
-
-local flying = false
 
 flyButton.MouseButton1Click:Connect(function()
     flying = not flying
@@ -74,8 +85,8 @@ flyButton.MouseButton1Click:Connect(function()
 end)
 
 local list = Instance.new("ScrollingFrame")
-list.Size = UDim2.new(1, -20, 1, -200)
-list.Position = UDim2.fromOffset(10, 128)
+list.Size = UDim2.new(1, -20, 1, -252)
+list.Position = UDim2.fromOffset(10, 159)
 list.BackgroundColor3 = Color3.fromRGB(24, 26, 32)
 list.BorderSizePixel = 0
 list.ScrollBarThickness = 5
@@ -89,17 +100,20 @@ layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = list
 
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    list.CanvasSize = UDim2.fromOffset(0, layout.AbsoluteContentSize.Y + 8)
+    list.CanvasSize = UDim2.fromOffset(
+        0, layout.AbsoluteContentSize.Y + 8
+    )
 end)
 
 local status = Instance.new("TextLabel")
 status.Size = UDim2.new(1, -20, 0, 22)
-status.Position = UDim2.new(0, 10, 1, -67)
+status.Position = UDim2.new(0, 10, 1, -78)
 status.BackgroundTransparency = 1
 status.Text = "Durum: Hazır"
 status.TextColor3 = Color3.fromRGB(180, 190, 200)
 status.TextSize = 12
 status.Font = Enum.Font.Gotham
+status.TextXAlignment = Enum.TextXAlignment.Left
 status.Parent = main
 
 local function addCard(defaultName)
@@ -153,13 +167,15 @@ local function addCard(defaultName)
         input = input,
         removed = false,
     }
+
     table.insert(cards, entry)
 
     remove.MouseButton1Click:Connect(function()
         if running then
-            status.Text = "Durdurup kartı silebilirsin."
+            status.Text = "Kart silmek için önce döngüyü durdur."
             return
         end
+
         entry.removed = true
         card:Destroy()
     end)
@@ -167,7 +183,7 @@ end
 
 local addButton = Instance.new("TextButton")
 addButton.Size = UDim2.fromOffset(38, 32)
-addButton.Position = UDim2.new(1, -48, 1, -36)
+addButton.Position = UDim2.new(1, -48, 1, -40)
 addButton.BackgroundColor3 = Color3.fromRGB(55, 125, 100)
 addButton.Text = "+"
 addButton.TextColor3 = Color3.new(1, 1, 1)
@@ -184,7 +200,7 @@ end)
 
 local startButton = Instance.new("TextButton")
 startButton.Size = UDim2.new(1, -66, 0, 32)
-startButton.Position = UDim2.new(0, 10, 1, -36)
+startButton.Position = UDim2.new(0, 10, 1, -40)
 startButton.BackgroundColor3 = Color3.fromRGB(40, 145, 95)
 startButton.Text = "Döngüyü başlat"
 startButton.TextColor3 = Color3.new(1, 1, 1)
@@ -210,6 +226,7 @@ end
 
 local function waitInterruptible(seconds)
     local finish = os.clock() + seconds
+
     while running and os.clock() < finish do
         task.wait(0.05)
     end
@@ -217,18 +234,22 @@ end
 
 local function moveToPart(part, useFlight)
     local root = getRoot()
+
     if not root or not part:IsDescendantOf(workspace) then
         return false
     end
 
     if not useFlight then
-        -- Yalnızca kendi oyununun test ortamında kullan.
         root.CFrame = part.CFrame + Vector3.new(0, 4, 0)
         return true
     end
 
+    local speed = math.clamp(
+        tonumber(flySpeed.Text) or 45, 1, 1000
+    )
+
     local distance = (root.Position - part.Position).Magnitude
-    local duration = math.max(distance / 45, 0.2)
+    local duration = math.max(distance / speed, 0.1)
     local destination = part.CFrame + Vector3.new(0, 4, 0)
 
     currentTween = TweenService:Create(
@@ -236,11 +257,11 @@ local function moveToPart(part, useFlight)
         TweenInfo.new(duration, Enum.EasingStyle.Linear),
         {CFrame = destination}
     )
+
     currentTween:Play()
 
     local completed = false
-    local connection
-    connection = currentTween.Completed:Connect(function()
+    local connection = currentTween.Completed:Connect(function()
         completed = true
     end)
 
@@ -254,16 +275,19 @@ local function moveToPart(part, useFlight)
 
     connection:Disconnect()
     currentTween = nil
+
     return running and completed
 end
 
 startButton.MouseButton1Click:Connect(function()
     if running then
         running = false
+
         if currentTween then
             currentTween:Cancel()
             currentTween = nil
         end
+
         startButton.Text = "Döngüyü başlat"
         startButton.BackgroundColor3 = Color3.fromRGB(40, 145, 95)
         status.Text = "Durum: Durduruldu"
@@ -275,19 +299,24 @@ startButton.MouseButton1Click:Connect(function()
 
     for _, card in ipairs(cards) do
         if not card.removed then
-            local name = card.input.Text:gsub("^%s+", ""):gsub("%s+$", "")
+            local name = card.input.Text
+                :gsub("^%s+", "")
+                :gsub("%s+$", "")
+
             if name ~= "" then
                 if unique[name] then
                     status.Text = "Aynı Part adı iki kez girilmiş."
                     return
                 end
-                unique[name] = true
 
+                unique[name] = true
                 local part = findPart(name)
+
                 if not part then
                     status.Text = "Part bulunamadı: " .. name
                     return
                 end
+
                 table.insert(targets, part)
             end
         end
@@ -299,13 +328,22 @@ startButton.MouseButton1Click:Connect(function()
     end
 
     local seconds = tonumber(interval.Text)
+
     if not seconds or seconds < 0 then
         status.Text = "Geçerli bir süre gir."
         return
     end
 
+    local speed = tonumber(flySpeed.Text)
+
+    if not speed or speed <= 0 then
+        status.Text = "Uçuş hızı 0'dan büyük olmalı."
+        return
+    end
+
     visited = {}
     running = true
+
     startButton.Text = "Döngüyü durdur"
     startButton.BackgroundColor3 = Color3.fromRGB(170, 60, 60)
 
